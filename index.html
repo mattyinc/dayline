@@ -31,7 +31,7 @@
   --well-2: rgba(24,26,32,.09);
   --text: #17191f;
   --muted: #4b4f58;
-  --faint: #7b7f88;
+  --faint: #646872;
   --ink: #17191f;          /* solid pill bg */
   --on-ink: #f7f5f0;
   --accent: #3b4fd8;       /* indigo ink */
@@ -914,14 +914,21 @@ function syncCard() {
     <div class="field"><label for="sbKey">Anon public key</label><input class="input" id="sbKey" autocomplete="off" placeholder="eyJhbGciOi…"></div>
     <button class="btn soft" data-act="sbSaveCfg">${ico('link')}Connect</button>`;
   if (!sbSession) return sbPendingEmail ? `
-    <p>We sent a 6-digit code to <b>${esc(sbPendingEmail)}</b>. Enter it here, or open the email's link on this machine.</p>
-    <div class="field"><label for="sbCode">Code</label><input class="input" id="sbCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ink" data-act="sbVerify">Sign in</button><button class="btn ghost" data-act="sbRestart">Use another email</button></div>` : `
+    <p>We emailed a sign-in link to <b>${esc(sbPendingEmail)}</b>. Open it <b>in this browser</b> and you're in. If the email shows a 6-digit code instead, enter it here.</p>
+    <div class="field"><label for="sbCode">Code (only if your email has one)</label><input class="input" id="sbCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn soft" data-act="sbVerify">Use code</button><button class="btn ghost" data-act="sbRestart">Back</button></div>` : `
     <p>Sign in to sync this browser. Your items stay private to your account.</p>
-    <div class="field"><label for="sbEmail">Email</label><input class="input" id="sbEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ink" data-act="sbSend">Email me a code</button>${SUPABASE_CONFIG.url ? '' : `<button class="btn ghost" data-act="sbForgetCfg">Change project</button>`}</div>`;
+    <form class="sb-form" onsubmit="return false">
+      <div class="field"><label for="sbEmail">Email</label><input class="input" id="sbEmail" type="email" autocomplete="username" placeholder="you@example.com"></div>
+      <div class="field"><label for="sbPass">Password</label><input class="input" id="sbPass" type="password" autocomplete="current-password" placeholder="Set one after your first sign-in"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ink" data-act="sbPassIn">Sign in</button><button class="btn ghost" data-act="sbSend">First time? Email me a link</button>${SUPABASE_CONFIG.url ? '' : `<button class="btn ghost" data-act="sbForgetCfg">Change project</button>`}</div>
+    </form>`;
   return `<p>Synced live across every browser you sign in on.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn soft" data-act="sbPull">Sync now</button><button class="btn ghost" data-act="sbSignOut">Sign out</button></div>`;
+    <form class="sb-form" onsubmit="return false">
+      <input type="email" autocomplete="username" value="${esc(sbSession.user.email || '')}" hidden>
+      <div class="field"><label for="sbNewPass">Password for your other machines</label><input class="input" id="sbNewPass" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn soft" data-act="sbSetPass">Set password</button><button class="btn soft" data-act="sbPull">Sync now</button><button class="btn ghost" data-act="sbSignOut">Sign out</button></div>
+    </form>`;
 }
 
 const backends = {
@@ -986,9 +993,9 @@ setInterval(() => { if (!document.hidden) pullSync(); }, 30000);
 document.addEventListener('click', e => {
   const nav = e.target.closest('.nav[data-view]'); if (nav) return go(nav.dataset.view);
   const sp = e.target.closest('.nav[data-space]'); if (sp) { state.space = sp.dataset.space; save(); render(true); return; }
-  const sb = e.target.closest('.seg button');
-  if (sb) { const k = sb.closest('.seg').dataset.seg; state[k] = sb.dataset.v; save();
-    sb.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === sb)); placeIndicators(sb.parentElement.parentElement);
+  const segBtn = e.target.closest('.seg button');
+  if (segBtn) { const k = segBtn.closest('.seg').dataset.seg; state[k] = segBtn.dataset.v; save();
+    segBtn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === segBtn)); placeIndicators(segBtn.parentElement.parentElement);
     setTimeout(() => render(), 180); return; }
   const a = e.target.closest('[data-act]'); if (!a) return;
   const row = a.closest('[data-id]'), id = row?.dataset.id;
@@ -1011,8 +1018,23 @@ document.addEventListener('click', e => {
       if (!/^\S+@\S+\.\S+$/.test(email)) { toast('Enter your email'); break; }
       a.disabled = true;
       sbClient().then(c => c.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } }))
-        .then(({ error }) => { if (error) throw error; sbPendingEmail = email; render(); toast('Code sent — check your email'); })
-        .catch(e => { a.disabled = false; toast(e.message || 'Could not send code'); });
+        .then(({ error }) => { if (error) throw error; sbPendingEmail = email; render(); toast('Link sent — open it in this browser'); })
+        .catch(e => { a.disabled = false; toast(/rate limit/i.test(e.message || '') ? 'Too many emails — Supabase allows a few per hour. Try again later.' : (e.message || 'Could not send email')); });
+      break; }
+    case 'sbPassIn': {
+      const email = document.getElementById('sbEmail').value.trim(), password = document.getElementById('sbPass').value;
+      if (!email || !password) { toast('Enter email and password'); break; }
+      a.disabled = true;
+      sbClient().then(c => c.auth.signInWithPassword({ email, password }))
+        .then(({ error }) => { if (error) throw error; toast('Signed in'); })
+        .catch(e => { a.disabled = false; toast(/invalid login/i.test(e.message || '') ? 'Wrong email or password. First time? Use “Email me a link”.' : (e.message || 'Could not sign in')); });
+      break; }
+    case 'sbSetPass': {
+      const password = document.getElementById('sbNewPass').value;
+      if (password.length < 8) { toast('Use at least 8 characters'); break; }
+      sb.auth.updateUser({ password })
+        .then(({ error }) => { if (error) throw error; document.getElementById('sbNewPass').value = ''; toast('Password set — use it on your other machines'); })
+        .catch(e => toast(e.message || 'Could not set password'));
       break; }
     case 'sbVerify': {
       const token = document.getElementById('sbCode').value.trim();
@@ -1063,6 +1085,13 @@ window.dayline = {
 
 setCollapsed(state.collapsed);
 render(true);
+(function authErrorFromLink() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (!h.get('error')) return;
+  const msg = h.get('error_code') === 'otp_expired' ? 'That sign-in link expired or was already used — request a new one.' : (h.get('error_description') || 'Sign-in failed');
+  history.replaceState(null, '', location.pathname + location.search);
+  state.view = 'brief'; setTimeout(() => toast(msg), 400);
+})();
 sbClient().catch(e => setSync('err', e.message)).finally(pullSync);
 </script>
 </body>

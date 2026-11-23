@@ -2,12 +2,15 @@
 
 1. **Create a project** at https://supabase.com (free tier is enough). Any region; pick one close to Mexico, such as East US.
 2. **Create the table:** SQL Editor → New query → paste [`schema.sql`](schema.sql) → Run.
-3. **Allow the site to sign in:** Authentication → URL Configuration
-   - Site URL: `https://mattyinc.github.io/dayline/` (a reused project is often still on the default `http://localhost:3000`, which sends sign-in links to the wrong place)
-   - Redirect URLs: add `https://mattyinc.github.io/dayline/` and `http://localhost:5178/`
-4. **Show the 6-digit code in the email** (so you can read it on your phone and type it on the work laptop):
-   Authentication → Emails → Templates → add `{{ .Token }}` to **both** *Confirm signup* (used on your very first sign-in) and *Magic Link* (every sign-in after that), for example:
-   `<p>Your Dayline code: <strong>{{ .Token }}</strong></p>`
+3. **Allow the site to sign in:** Authentication → URL Configuration → Redirect URLs → add
+   `https://mattyinc.github.io/dayline/**` and `http://localhost:5178/**`.
+   The `/**` matters: without it, `.../dayline/` doesn't match and links fall back to the Site URL (often `http://localhost:3000`).
+   Leave the Site URL alone if another app uses this project.
+4. **Sign-in works like this** (the free plan doesn't allow editing email templates, so there's no 6-digit code):
+   - First machine: Dayline → Assistant → *First time? Email me a link* → open the link **in the same browser**.
+   - Still there: type a password under *Password for your other machines* → *Set password*.
+   - Every other machine: email + password → *Sign in*.
+   - The built-in email service only sends a few emails per hour; if one doesn't arrive, wait.
 5. **Copy the keys:** Project Settings → API → *Project URL* and the *anon public* key.
    Paste them into `SUPABASE_CONFIG` near the sync section in `index.html` and push, so every machine is pre-configured.
    (Or paste them into the Assistant view on each machine instead.)
