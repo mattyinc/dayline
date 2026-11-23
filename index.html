@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Dayline</title>
-<meta name="theme-color" content="#f2efe9" />
+<meta name="theme-color" content="#e9ecf1" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -19,8 +19,8 @@
   --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --display: var(--font);
 
-  --bg: #f2efe9;
-  --blob-1: #f6c9a8; --blob-2: #b9c8f5; --blob-3: #cfe3c8;
+  --bg: #e9ecf1;           /* mist grey */
+  --blob-1: #d6deeb; --blob-2: #c3d2ee; --blob-3: #dde6ef; /* ice-blue light */
   --glass: rgba(255,255,255,.58);
   --glass-2: rgba(255,255,255,.78);
   --glass-3: rgba(255,255,255,.94);
@@ -843,7 +843,7 @@ function openPalette() {
 /* ── Theme, sidebar, brief, sync ── */
 function toggleTheme() {
   const d = document.documentElement, next = d.dataset.theme === 'dark' ? 'light' : 'dark';
-  const apply = () => { d.dataset.theme = next; store.set('dayline:theme', next); document.querySelector('meta[name=theme-color]').content = next === 'dark' ? '#0d0f13' : '#f2efe9'; };
+  const apply = () => { d.dataset.theme = next; store.set('dayline:theme', next); document.querySelector('meta[name=theme-color]').content = next === 'dark' ? '#0d0f13' : '#e9ecf1'; };
   try { localStorage.setItem('dayline:theme', next); } catch (e) {}
   if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(apply); else apply();
 }

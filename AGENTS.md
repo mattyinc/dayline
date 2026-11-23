@@ -35,6 +35,6 @@ Hosted on GitHub Pages; data in Supabase (Postgres + email-code login + row-leve
 - Export/Import JSON uses `{ exported, items }`.
 
 ## Design
-Glass panels over animated gradient light. Geist everywhere, light weights (300–500; 600 only on the logo mark). Indigo accent.
+Glass panels over animated gradient light: mist-grey page (#e9ecf1) with soft ice-blue light. Geist everywhere, light weights (300–500; 600 only on the logo mark). Indigo accent.
 Easing: `--ease` cubic-bezier(.2,.8,.2,1), `--spring` cubic-bezier(.34,1.36,.5,1). Respects reduced motion.
 Design language studied from a commercial template (Sylva by OVERSHOOT); no code, assets, or copy were taken from it. Keep it that way.
