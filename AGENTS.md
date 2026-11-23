@@ -1,17 +1,21 @@
 # Dayline
 
 Personal planner/agenda. Front end is one file (`index.html`), no frameworks, light theme by default with a dark toggle.
-Back end is `server.py`: Python standard library + SQLite, no dependencies.
+Hosted on GitHub Pages; data in Supabase (Postgres + email-code login + row-level security).
+`server.py` (Python stdlib + SQLite) is the offline/local alternative.
 
 ## Run
 - `python3 server.py` → http://localhost:5178. Data is saved to `dayline.db` (git-ignored).
 - Env: `DAYLINE_PORT`, `DAYLINE_HOST` (default 127.0.0.1, localhost only), `DAYLINE_DB`.
+- Production: https://mattyinc.github.io/dayline/ — setup in `supabase/README.md`, schema in `supabase/schema.sql`.
 - Opening `index.html` directly still works, but then data lives only in that browser's localStorage.
 - Tests: `python3 -m unittest -v`.
 
 ## Structure
 - Views: Agenda (1), Week (2), Tasks (3), Assistant (4). Keys: `N` new, `⌘K` palette, `[` collapse sidebar, `←/→` weeks, `T` this week.
 - Spaces: work, build, growth, life. Types: meeting, focus, call, email, learn, personal, task.
+- Sync priority: Supabase (configured + signed in) → `server.py` on localhost → browser only. Config: `SUPABASE_CONFIG` in `index.html` (anon key is public by design) or the Assistant view (stored in `dayline:sb`).
+- Supabase sync is per row: upserts only changed items, deletes removed ones (diff against `lastSynced`), realtime subscription triggers a pull.
 - When served by `server.py`, the page syncs with `/api/items`: pulls on load, on tab focus and every 30s; PUTs the full list 600ms after a change. localStorage (`dayline:v1`) is a cache.
 - First run against an empty DB uploads whatever the browser already has (the sample data on a fresh browser).
 - UI state: `dayline:v1:ui`. Theme: `dayline:theme`.

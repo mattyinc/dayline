@@ -632,10 +632,12 @@ function briefView() {
         <button class="btn soft" data-act="export">${ico('down')}Export JSON</button>
         <button class="btn soft" data-act="import">${ico('up')}Import JSON</button></div>
     </div>
-    <div class="card glass" style="--i:1"><h4>Connect your assistant</h4>
-      <p>When you run <code>python3 server.py</code>, Dayline saves to SQLite through <code>/api/items</code> on its own. Only fill this in to point at a different server.</p>
-      <div class="field"><label for="ep">Endpoint URL</label><input class="input" id="ep" placeholder="/api/items (default when served by server.py)" value="${esc(state.endpoint)}"></div>
-      <div style="display:flex;gap:8px;align-items:center"><button class="btn soft" data-act="connect">${ico('link')}Save & pull</button><span class="status ${syncStatus.cls}" id="syncStatus"><i></i>${esc(syncStatus.text)}</span></div>
+    <div class="card glass" style="--i:1"><h4>Sync <span class="status ${syncStatus.cls}" id="syncStatus"><i></i>${esc(syncStatus.text)}</span></h4>
+      <p>Saving to: <b>${{ supabase: 'Supabase · ' + esc(sbSession?.user?.email || ''), server: 'Local server (SQLite)', local: 'This browser only' }[mode()]}</b></p>
+      ${syncCard()}
+      <details style="margin-top:14px"><summary class="hint" style="cursor:pointer">Use a different HTTP server instead</summary>
+        <div class="field" style="margin-top:10px"><label for="ep">Endpoint URL</label><input class="input" id="ep" placeholder="/api/items (automatic on localhost)" value="${esc(state.endpoint)}"></div>
+        <button class="btn soft" data-act="connect">Save & pull</button></details>
       <p style="margin-top:16px">Or drive it from the console / an injected script:</p>
       <pre>dayline.add("Recon mock run 4 fri 10:00 #work @focus 2h")
 dayline.list({ date: "${todayIso()}" })
@@ -868,26 +870,115 @@ function normalize(x) {
     date: /^\d{4}-\d\d-\d\d$/.test(x.date) ? x.date : todayIso(), time: /^\d\d:\d\d$/.test(x.time) ? x.time : null, dur: +x.dur || 30, done: !!x.done, note: x.note || '' };
 }
 function setSync(cls, text) { syncStatus = { cls, text }; const el = document.getElementById('syncStatus'); if (el) { el.className = 'status ' + cls; el.innerHTML = `<i></i>${esc(text)}`; } }
+const stamp = () => 'Synced ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+/* Where data lives: Supabase (any machine, signed in) → local server.py (SQLite) → this browser only.
+   The anon key is public by design; row-level security limits every row to its owner. */
+const SUPABASE_CONFIG = { url: '', anonKey: '' }; // fill in once, then every machine just signs in
+const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
+let sbCfg = { ...SUPABASE_CONFIG, ...(store.get('dayline:sb', {}) || {}) };
+let sb = null, sbSession = null, sbPendingEmail = '', lastSynced = new Map();
+const canon = i => JSON.stringify(normalize(i));
+const sbReady = () => !!(sbCfg.url && sbCfg.anonKey);
+
+function ep() { return state.endpoint || (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) ? '/api/items' : ''); }
+function mode() { return sbReady() && sbSession ? 'supabase' : ep() ? 'server' : 'local'; }
+
+async function sbClient() {
+  if (!sbReady()) return null;
+  if (sb) return sb;
+  if (!window.supabase) await new Promise((res, rej) => {
+    const el = document.createElement('script'); el.src = SB_LIB; el.onload = res; el.onerror = () => rej(new Error('Could not load Supabase'));
+    document.head.appendChild(el);
+  });
+  sb = window.supabase.createClient(sbCfg.url, sbCfg.anonKey, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'dayline:sb-auth', detectSessionInUrl: true } });
+  sbSession = (await sb.auth.getSession()).data.session;
+  sb.auth.onAuthStateChange((_e, sess) => {
+    const was = !!sbSession; sbSession = sess;
+    if (was !== !!sess) { pullSync.done = false; lastSynced = new Map(); if (sess) sbRealtime(); render(); pullSync(); }
+  });
+  if (sbSession) sbRealtime();
+  return sb;
+}
+function sbRealtime() {
+  if (sbRealtime.ch || !sb) return;
+  sbRealtime.ch = sb.channel('dayline-items')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, () => { clearTimeout(sbRealtime.t); sbRealtime.t = setTimeout(pullSync, 400); })
+    .subscribe();
+}
+
+function syncCard() {
+  if (!sbReady()) return `
+    <p>To use Dayline on every machine, connect a free Supabase project (setup steps are in <code>supabase/README.md</code>). Paste its <b>Project URL</b> and <b>anon public key</b>.</p>
+    <div class="field"><label for="sbUrl">Project URL</label><input class="input" id="sbUrl" placeholder="https://xxxx.supabase.co"></div>
+    <div class="field"><label for="sbKey">Anon public key</label><input class="input" id="sbKey" autocomplete="off" placeholder="eyJhbGciOi…"></div>
+    <button class="btn soft" data-act="sbSaveCfg">${ico('link')}Connect</button>`;
+  if (!sbSession) return sbPendingEmail ? `
+    <p>We sent a 6-digit code to <b>${esc(sbPendingEmail)}</b>. Enter it here, or open the email's link on this machine.</p>
+    <div class="field"><label for="sbCode">Code</label><input class="input" id="sbCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ink" data-act="sbVerify">Sign in</button><button class="btn ghost" data-act="sbRestart">Use another email</button></div>` : `
+    <p>Sign in to sync this browser. Your items stay private to your account.</p>
+    <div class="field"><label for="sbEmail">Email</label><input class="input" id="sbEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ink" data-act="sbSend">Email me a code</button>${SUPABASE_CONFIG.url ? '' : `<button class="btn ghost" data-act="sbForgetCfg">Change project</button>`}</div>`;
+  return `<p>Synced live across every browser you sign in on.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn soft" data-act="sbPull">Sync now</button><button class="btn ghost" data-act="sbSignOut">Sign out</button></div>`;
+}
+
+const backends = {
+  async supabase() {
+    return {
+      async pull() {
+        const { data, error } = await sb.from('items').select('id,title,type,space,date,time,dur,done,note').order('date');
+        if (error) throw error;
+        return data;
+      },
+      async push(items) {
+        const changed = items.filter(i => lastSynced.get(i.id) !== canon(i));
+        const ids = new Set(items.map(i => i.id)), removed = [...lastSynced.keys()].filter(id => !ids.has(id));
+        if (changed.length) {
+          const rows = changed.map(i => ({ ...normalize(i), user_id: sbSession.user.id, updated_at: new Date().toISOString() }));
+          const { error } = await sb.from('items').upsert(rows, { onConflict: 'user_id,id' }); if (error) throw error;
+        }
+        if (removed.length) { const { error } = await sb.from('items').delete().in('id', removed); if (error) throw error; }
+        lastSynced = new Map(items.map(i => [i.id, canon(i)]));
+      },
+    };
+  },
+  async server() {
+    const url = ep();
+    return {
+      async pull() { const r = await fetch(url, { cache: 'no-store' }); if (!r.ok) throw new Error('Server ' + r.status); return (await r.json()).items || []; },
+      async push(items) { const r = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) }); if (!r.ok) throw new Error('Server ' + r.status); },
+    };
+  },
+};
+
 async function pullSync() {
-  const url = ep(); if (!url || pushSync.pending) return;
-  try { const r = await fetch(url, { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); const d = await r.json();
-    if (Array.isArray(d.items) && d.items.length === 0 && state.items.length && !pullSync.done) { pullSync.done = true; pushSync(true); return; }
+  const m = mode();
+  if (m === 'local') { setSync('', sbReady() ? 'Sign in to sync' : 'This browser only'); return; }
+  if (pushSync.pending || pullSync.busy) return;
+  pullSync.busy = true;
+  try {
+    const be = await backends[m](), remote = (await be.pull()).map(normalize).filter(Boolean);
+    if (!remote.length && state.items.length && !pullSync.done) { pullSync.done = true; pullSync.busy = false; return pushSync(true); }
     pullSync.done = true;
-    if (Array.isArray(d.items) && !document.querySelector('.scrim')) { state.items = d.items.map(normalize).filter(Boolean); save.last = JSON.stringify(state.items); store.set(KEY, state.items); render(); }
-    setSync('ok', 'Synced ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
-  } catch (e) { setSync('err', 'Could not reach endpoint'); }
+    if (m === 'supabase') lastSynced = new Map(remote.map(i => [i.id, canon(i)]));
+    const j = JSON.stringify(remote);
+    if (j !== save.last && !document.querySelector('.scrim')) { state.items = remote; save.last = j; store.set(KEY, state.items); render(); }
+    setSync('ok', stamp());
+  } catch (e) { setSync('err', e.message || 'Could not sync'); }
+  pullSync.busy = false;
 }
 let syncT;
 function pushSync(now) {
-  const url = ep(); if (!url) return; clearTimeout(syncT); pushSync.pending = true;
+  const m = mode(); if (m === 'local') return;
+  clearTimeout(syncT); pushSync.pending = true;
   syncT = setTimeout(async () => {
-    try { const r = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: state.items }) }); if (!r.ok) throw 0;
-      setSync('ok', 'Synced ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
-    } catch (e) { setSync('err', 'Push failed'); }
+    try { await (await backends[m]()).push(state.items); setSync('ok', stamp()); }
+    catch (e) { setSync('err', 'Push failed — ' + (e.message || '')); }
     pushSync.pending = false;
   }, now ? 0 : 600);
 }
-function ep() { return state.endpoint || (location.protocol.startsWith('http') ? '/api/items' : ''); }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) pullSync(); });
 setInterval(() => { if (!document.hidden) pullSync(); }, 30000);
 
@@ -909,6 +1000,29 @@ document.addEventListener('click', e => {
     case 'copyBrief': copyBrief(); break;
     case 'export': exportJSON(); break;
     case 'import': importJSON(); break;
+    case 'sbSaveCfg': {
+      const url = document.getElementById('sbUrl').value.trim().replace(/\/+$/, ''), key = document.getElementById('sbKey').value.trim();
+      if (!/^https:\/\/[\w-]+\.supabase\.co$/.test(url) || key.length < 20) { toast('Check the project URL and anon key'); break; }
+      sbCfg = { url, anonKey: key }; store.set('dayline:sb', sbCfg); sb = null;
+      sbClient().then(render).catch(e => toast(e.message)); break; }
+    case 'sbForgetCfg': sbCfg = { ...SUPABASE_CONFIG }; store.set('dayline:sb', {}); sb = null; sbSession = null; render(); break;
+    case 'sbSend': {
+      const email = document.getElementById('sbEmail').value.trim();
+      if (!/^\S+@\S+\.\S+$/.test(email)) { toast('Enter your email'); break; }
+      a.disabled = true;
+      sbClient().then(c => c.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } }))
+        .then(({ error }) => { if (error) throw error; sbPendingEmail = email; render(); toast('Code sent — check your email'); })
+        .catch(e => { a.disabled = false; toast(e.message || 'Could not send code'); });
+      break; }
+    case 'sbVerify': {
+      const token = document.getElementById('sbCode').value.trim();
+      sbClient().then(c => c.auth.verifyOtp({ email: sbPendingEmail, token, type: 'email' }))
+        .then(({ error }) => { if (error) throw error; sbPendingEmail = ''; toast('Signed in'); })
+        .catch(e => toast(e.message || 'Wrong or expired code'));
+      break; }
+    case 'sbRestart': sbPendingEmail = ''; render(); break;
+    case 'sbPull': pullSync(); break;
+    case 'sbSignOut': sb && sb.auth.signOut(); toast('Signed out — this browser keeps a local copy'); break;
     case 'connect': state.endpoint = document.getElementById('ep').value.trim(); save(); if (state.endpoint) { setSync('', 'Connecting…'); pullSync(); } else setSync('', 'Not connected'); break;
   }
 });
@@ -949,7 +1063,7 @@ window.dayline = {
 
 setCollapsed(state.collapsed);
 render(true);
-pullSync();
+sbClient().catch(e => setSync('err', e.message)).finally(pullSync);
 </script>
 </body>
 </html>
