@@ -874,7 +874,7 @@ const stamp = () => 'Synced ' + new Date().toLocaleTimeString('en-GB', { hour: '
 
 /* Where data lives: Supabase (any machine, signed in) → local server.py (SQLite) → this browser only.
    The anon key is public by design; row-level security limits every row to its owner. */
-const SUPABASE_CONFIG = { url: '', anonKey: '' }; // fill in once, then every machine just signs in
+const SUPABASE_CONFIG = { url: 'https://zyjtnumkazdgtqafjgba.supabase.co', anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5anRudW1rYXpkZ3RxYWZqZ2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1OTcyODIsImV4cCI6MjEwMDE3MzI4Mn0.WawJEYPBHvUOzW8JKYBpHR1ug9bcH-h6gUQVwqQ3EZA' }; // fill in once, then every machine just signs in
 const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
 let sbCfg = { ...SUPABASE_CONFIG, ...(store.get('dayline:sb', {}) || {}) };
 let sb = null, sbSession = null, sbPendingEmail = '', lastSynced = new Map();
