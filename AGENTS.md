@@ -17,7 +17,8 @@ Hosted on GitHub Pages; data in Supabase (Postgres + email-code login + row-leve
 - Sync priority: Supabase (configured + signed in) → `server.py` on localhost → browser only. Config: `SUPABASE_CONFIG` in `index.html` (anon key is public by design) or the Assistant view (stored in `dayline:sb`).
 - Supabase sync is per row: upserts only changed items, deletes removed ones (diff against `lastSynced`), realtime subscription triggers a pull.
 - When served by `server.py`, the page syncs with `/api/items`: pulls on load, on tab focus and every 30s; PUTs the full list 600ms after a change. localStorage (`dayline:v1`) is a cache.
-- First run against an empty DB uploads whatever the browser already has (the sample data on a fresh browser).
+- The remote (Supabase or server) is the source of truth: a pull always replaces the local copy, and a stale local copy is never auto-uploaded. Moving data in is explicit: Import JSON.
+- New browsers start empty (no sample data). Assistant view has *Clear all items* (confirm dialog + undo toast).
 - UI state: `dayline:v1:ui`. Theme: `dayline:theme`.
 
 ## Item shape

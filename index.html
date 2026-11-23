@@ -176,6 +176,7 @@ svg.i { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none;
 .btn.ghost { color: var(--muted); padding: 0 12px; }
 .btn.ghost:hover { color: var(--text); background: var(--well); }
 .btn.danger { color: var(--warn); }
+.btn:disabled { opacity: .45; cursor: default; pointer-events: none; }
 .iconbtn { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); transition: background .2s, color .2s, transform .35s var(--spring); }
 .iconbtn:hover { background: var(--well); color: var(--text); }
 .iconbtn:active { transform: scale(.92); }
@@ -446,26 +447,6 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtDay = (s, o = { weekday: 'short', day: 'numeric', month: 'short' }) => fromIso(s).toLocaleDateString('en-GB', o);
 
-function seed() {
-  const t = new Date(), d = n => iso(addDays(t, n));
-  return [
-    { title: 'Send DMD mapping deltas to the bank', type: 'email', space: 'work', date: d(-2), time: '11:00', dur: 30 },
-    { title: 'Reconcile FBNK_CUSTOMER counts — mock run 3', type: 'task', space: 'work', date: d(-1), time: '16:00', dur: 60 },
-    { title: 'Migration stand-up', type: 'meeting', space: 'work', date: d(0), time: '09:00', dur: 30 },
-    { title: 'Deep work: recon SQL for ACCOUNT', type: 'focus', space: 'work', date: d(0), time: '10:00', dur: 120 },
-    { title: 'Call with T24 functional lead', type: 'call', space: 'work', date: d(0), time: '14:00', dur: 45 },
-    { title: 'Snowflake: Snowpipe module', type: 'learn', space: 'growth', date: d(0), time: '18:00', dur: 60 },
-    { title: 'Gym — upper body', type: 'personal', space: 'life', date: d(0), time: '19:30', dur: 60 },
-    { title: 'Pay credit card', type: 'task', space: 'life', date: d(1), time: null, dur: 15 },
-    { title: 'Cutover rehearsal checklist review', type: 'meeting', space: 'work', date: d(1), time: '10:00', dur: 60 },
-    { title: 'Cadence: fix tvOS focus engine bug', type: 'focus', space: 'build', date: d(1), time: '20:00', dur: 90 },
-    { title: 'WorldCheck screening batch sign-off', type: 'task', space: 'work', date: d(2), time: null, dur: 30 },
-    { title: 'Update AGENTS.md for Marginalia', type: 'task', space: 'build', date: d(2), time: null, dur: 20 },
-    { title: 'Databricks: Delta Live Tables lab', type: 'learn', space: 'growth', date: d(3), time: '18:30', dur: 60 },
-    { title: 'Mock run 4 kickoff', type: 'meeting', space: 'work', date: d(4), time: '09:00', dur: 60 },
-    { title: 'Weekly review — John 15', type: 'personal', space: 'life', date: d(6), time: '08:00', dur: 45 },
-  ].map(x => ({ id: uid(), done: false, note: '', ...x }));
-}
 
 const store = {
   get(k, f) { try { const v = localStorage.getItem(k); return v == null ? f : JSON.parse(v); } catch (e) { return f; } },
@@ -476,7 +457,7 @@ const state = Object.assign({
   items: null, view: 'agenda', space: 'all', typeFilter: 'all', show: 'todo',
   weekOffset: 0, collapsed: false, endpoint: '',
 }, store.get(KEY + ':ui', {}));
-state.items = store.get(KEY, null) || seed();
+state.items = store.get(KEY, null) || [];
 save.last = JSON.stringify(state.items);
 let syncStatus = { cls: '', text: 'Not connected' };
 
@@ -630,7 +611,8 @@ function briefView() {
       <pre id="briefPre">${esc(briefText())}</pre>
       <div class="acts"><button class="btn ink" data-act="copyBrief">${ico('copy')}Copy brief</button>
         <button class="btn soft" data-act="export">${ico('down')}Export JSON</button>
-        <button class="btn soft" data-act="import">${ico('up')}Import JSON</button></div>
+        <button class="btn soft" data-act="import">${ico('up')}Import JSON</button>
+        <button class="btn ghost danger" data-act="clearAll" ${state.items.length ? '' : 'disabled'}>Clear all items</button></div>
     </div>
     <div class="card glass" style="--i:1"><h4>Sync <span class="status ${syncStatus.cls}" id="syncStatus"><i></i>${esc(syncStatus.text)}</span></h4>
       <p>Saving to: <b>${{ supabase: 'Supabase · ' + esc(sbSession?.user?.email || ''), server: 'Local server (SQLite)', local: 'This browser only' }[mode()]}</b></p>
@@ -851,6 +833,19 @@ function setCollapsed(v) { state.collapsed = v; document.getElementById('app').c
 async function copyBrief() {
   try { await navigator.clipboard.writeText(briefText()); toast('Brief copied — paste it to your assistant'); } catch (e) { toast('Copy failed — select the text manually'); }
 }
+function confirmClearAll() {
+  const n = state.items.length; if (!n) return;
+  overlay(`<h2>Clear everything? <button class="iconbtn" data-x aria-label="Close">${ico('x')}</button></h2>
+    <p class="hint" style="font-size:13.5px;margin:0 0 14px">This deletes all <b>${n}</b> items${mode() === 'supabase' ? ' from your account on every machine' : mode() === 'server' ? ' from the local database' : ' in this browser'}. Export first if you might want them back.</p>
+    <div class="foot"><button class="btn ghost" data-x>Cancel</button><button class="btn ink" data-clear style="background:var(--warn);color:#fff">Delete ${n} items</button></div>`,
+  (s, close) => {
+    s.querySelectorAll('[data-x]').forEach(b => b.onclick = close);
+    s.querySelector('[data-clear]').onclick = () => {
+      const prev = state.items; state.items = []; save(); render(); close();
+      toast(`Cleared ${n} items`, () => { state.items = prev; save(); render(); });
+    };
+  });
+}
 function exportJSON() {
   const blob = new Blob([JSON.stringify({ exported: new Date().toISOString(), items: state.items }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `dayline-${todayIso()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
@@ -967,7 +962,6 @@ async function pullSync() {
   pullSync.busy = true;
   try {
     const be = await backends[m](), remote = (await be.pull()).map(normalize).filter(Boolean);
-    if (!remote.length && state.items.length && !pullSync.done) { pullSync.done = true; pullSync.busy = false; return pushSync(true); }
     pullSync.done = true;
     if (m === 'supabase') lastSynced = new Map(remote.map(i => [i.id, canon(i)]));
     const j = JSON.stringify(remote);
@@ -1007,6 +1001,7 @@ document.addEventListener('click', e => {
     case 'copyBrief': copyBrief(); break;
     case 'export': exportJSON(); break;
     case 'import': importJSON(); break;
+    case 'clearAll': confirmClearAll(); break;
     case 'sbSaveCfg': {
       const url = document.getElementById('sbUrl').value.trim().replace(/\/+$/, ''), key = document.getElementById('sbKey').value.trim();
       if (!/^https:\/\/[\w-]+\.supabase\.co$/.test(url) || key.length < 20) { toast('Check the project URL and anon key'); break; }
