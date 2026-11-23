@@ -13,10 +13,14 @@ create table if not exists public.items (
   time       text        check (time ~ '^\d\d:\d\d$'),
   dur        integer     not null default 30 check (dur between 5 and 1440),
   done       boolean     not null default false,
+  doing      boolean     not null default false,
   note       text        not null default '',
   updated_at timestamptz not null default now(),
   primary key (user_id, id)
 );
+
+-- Added for the Kanban board (safe on existing tables).
+alter table public.items add column if not exists doing boolean not null default false;
 
 create index if not exists items_user_date on public.items (user_id, date);
 

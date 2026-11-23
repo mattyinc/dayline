@@ -67,6 +67,13 @@ class ApiTest(unittest.TestCase):
         self.assertTrue(upd["done"])
         self.assertEqual(upd["title"], "Pay card")  # untouched fields survive
 
+    def test_doing_status(self):
+        _, it = self.req("POST", "/api/items", {"title": "In progress", "date": "2026-11-24", "doing": True})
+        self.assertTrue(it["doing"])
+        _, upd = self.req("PATCH", f"/api/items/{it['id']}", {"done": True})
+        self.assertTrue(upd["done"])
+        self.assertFalse(upd["doing"])  # done wins
+
     def test_delete(self):
         _, it = self.req("POST", "/api/items", {"title": "Temp", "date": "2026-11-24"})
         self.assertEqual(self.req("DELETE", f"/api/items/{it['id']}")[0], 200)

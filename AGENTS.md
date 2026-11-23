@@ -12,7 +12,7 @@ Hosted on GitHub Pages; data in Supabase (Postgres + email-code login + row-leve
 - Tests: `python3 -m unittest -v`.
 
 ## Structure
-- Views: Agenda (1), Week (2), Tasks (3), Assistant (4). Keys: `N` new, `⌘K` palette, `[` collapse sidebar, `←/→` weeks, `T` this week.
+- Views: Agenda (1), Week (2), Tasks (3, Board/List), Assistant (4), Focus (5). Keys: `N` new, `P` start/pause timer, `⌘K` palette, `[` collapse sidebar, `←/→` weeks, `T` this week.
 - Spaces: work, build, growth, life. Types: meeting, focus, call, email, learn, personal, task.
 - Sync priority: Supabase (configured + signed in) → `server.py` on localhost → browser only. Config: `SUPABASE_CONFIG` in `index.html` (anon key is public by design) or the Assistant view (stored in `dayline:sb`).
 - Supabase sync is per row: upserts only changed items, deletes removed ones (diff against `lastSynced`), realtime subscription triggers a pull.
@@ -21,10 +21,14 @@ Hosted on GitHub Pages; data in Supabase (Postgres + email-code login + row-leve
 - New browsers start empty (no sample data). Assistant view has *Clear all items* (confirm dialog + undo toast).
 - UI state: `dayline:v1:ui`. Theme: `dayline:theme`.
 
+## Board and focus
+- Kanban on Tasks: To do / Doing / Done from `done` + `doing` (done wins). Drag and drop, or the arrow buttons on each card. Moves animate with FLIP.
+- Pomodoro: per-browser state in localStorage `dayline:pomo` (mode, endAt, lengths, session log). Timer is timestamp-based, survives reloads, syncs across tabs via the `storage` event. Sessions linked to an item show as `N×` on its card. Floating pill shows on other views while a timer is active.
+
 ## Item shape
 ```json
 { "id": "abc123", "title": "...", "type": "focus", "space": "work",
-  "date": "2026-11-24", "time": "10:00", "dur": 60, "done": false, "note": "" }
+  "date": "2026-11-24", "time": "10:00", "dur": 60, "done": false, "doing": false, "note": "" }
 ```
 `time` is `null` for all-day/anytime items.
 

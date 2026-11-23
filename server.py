@@ -27,7 +27,7 @@ PORT = int(os.environ.get("DAYLINE_PORT", "5178"))
 
 TYPES = {"meeting", "focus", "call", "email", "learn", "personal", "task"}
 SPACES = {"work", "build", "growth", "life"}
-FIELDS = ("id", "title", "type", "space", "date", "time", "dur", "done", "note")
+FIELDS = ("id", "title", "type", "space", "date", "time", "dur", "done", "doing", "note")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS items (
@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS items (
   time  TEXT,
   dur   INTEGER NOT NULL DEFAULT 30,
   done  INTEGER NOT NULL DEFAULT 0,
+  doing INTEGER NOT NULL DEFAULT 0,
   note  TEXT NOT NULL DEFAULT '',
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -50,6 +51,9 @@ def connect(path=None):
     con = sqlite3.connect(path or DB_PATH)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
+    cols = {r[1] for r in con.execute("PRAGMA table_info(items)")}
+    if "doing" not in cols:  # migrate databases created before the Kanban board
+        con.execute("ALTER TABLE items ADD COLUMN doing INTEGER NOT NULL DEFAULT 0")
     return con
 
 
@@ -77,6 +81,7 @@ def normalize(x, existing=None):
         "time": t,
         "dur": max(5, int(base.get("dur") or 30)),
         "done": bool(base.get("done")),
+        "doing": bool(base.get("doing")) and not bool(base.get("done")),
         "note": str(base.get("note") or ""),
     }
 
@@ -84,17 +89,18 @@ def normalize(x, existing=None):
 def row_to_item(r):
     item = {k: r[k] for k in FIELDS}
     item["done"] = bool(item["done"])
+    item["doing"] = bool(item["doing"])
     return item
 
 
 def upsert(con, it):
     con.execute(
-        """INSERT INTO items (id,title,type,space,date,time,dur,done,note,updated_at)
-           VALUES (:id,:title,:type,:space,:date,:time,:dur,:done,:note,datetime('now'))
+        """INSERT INTO items (id,title,type,space,date,time,dur,done,doing,note,updated_at)
+           VALUES (:id,:title,:type,:space,:date,:time,:dur,:done,:doing,:note,datetime('now'))
            ON CONFLICT(id) DO UPDATE SET title=excluded.title,type=excluded.type,space=excluded.space,
-             date=excluded.date,time=excluded.time,dur=excluded.dur,done=excluded.done,note=excluded.note,
+             date=excluded.date,time=excluded.time,dur=excluded.dur,done=excluded.done,doing=excluded.doing,note=excluded.note,
              updated_at=excluded.updated_at""",
-        {**it, "done": int(it["done"])},
+        {**it, "done": int(it["done"]), "doing": int(it["doing"])},
     )
 
 

@@ -312,6 +312,70 @@ textarea.input { height: 72px; padding: 10px 12px; resize: vertical; }
 .status i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
 .status.ok i { background: var(--good); } .status.err i { background: var(--warn); }
 
+/* Kanban */
+.board { display: grid; grid-template-columns: repeat(3, minmax(230px, 1fr)); gap: 14px; align-items: start; }
+.kcol { border-radius: var(--r-card); padding: 14px 10px 10px; transition: background .25s var(--ease), box-shadow .25s var(--ease); }
+.kcol.over { background: var(--glass-2); box-shadow: var(--shadow), inset 0 0 0 2px var(--accent-soft); }
+.kcol h3 { margin: 0 0 10px; padding: 0 6px; font: 500 14px/1 var(--font); display: flex; align-items: center; gap: 8px; }
+.kcol h3 .kd { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.kcol h3 .n { font-size: 11px; color: var(--muted); background: var(--well-2); border-radius: 8px; padding: 3px 7px; font-variant-numeric: tabular-nums; }
+.lane { display: flex; flex-direction: column; gap: 8px; min-height: 64px; }
+.lane-empty { border: 1.5px dashed var(--line-2); border-radius: 14px; padding: 18px 10px; text-align: center; color: var(--faint); font-size: 12.5px; }
+.kcard { position: relative; background: var(--glass-3); border: 1px solid var(--rim); border-radius: 16px; padding: 12px 12px 10px; cursor: grab;
+  box-shadow: 0 1px 0 var(--rim) inset, 0 10px 20px -16px rgba(0,0,0,.4); transition: transform .35s var(--spring), box-shadow .3s var(--ease), opacity .2s; }
+.kcard:hover { transform: translateY(-2px); box-shadow: 0 1px 0 var(--rim) inset, 0 16px 28px -18px rgba(0,0,0,.45); }
+.kcard:active { cursor: grabbing; }
+.kcard.dragging { opacity: .35; transform: scale(.97); }
+.kcard .kt { display: flex; gap: 10px; align-items: flex-start; padding-right: 58px; }
+.kcard .kt .tico { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: var(--c); background: color-mix(in oklab, var(--c) 16%, transparent); flex: none; }
+.kcard .kt .tico svg.i { width: 14px; height: 14px; }
+.kcard .kt b { font-weight: 500; line-height: 1.35; padding-top: 3px; }
+.kcard.done .kt b { color: var(--faint); text-decoration: line-through; }
+.kcard .km { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--faint); }
+.kcard .km .late { color: var(--warn); }
+.kcard .kact { position: absolute; top: 8px; right: 8px; display: flex; gap: 0; opacity: 0; transition: opacity .2s; }
+.kcard:hover .kact, .kcard:focus-within .kact { opacity: 1; }
+.kcard .kact .iconbtn { width: 28px; height: 28px; }
+.kcard .kact svg.i { width: 14px; height: 14px; }
+
+/* Focus / Pomodoro */
+.focus { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.timer { display: flex; flex-direction: column; align-items: center; padding: 22px 18px 24px; }
+.ring { position: relative; width: min(290px, 68vw); aspect-ratio: 1; margin: 22px 0 8px; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.ring circle { fill: none; stroke-width: 5; }
+.ring .track { stroke: var(--well-2); }
+.ring .prog { stroke: var(--rc, var(--accent)); stroke-linecap: round; stroke-dasharray: 100; transition: stroke-dashoffset .3s linear, stroke .4s var(--ease); }
+.ring[data-mode="short"], .ring[data-mode="long"] { --rc: var(--good); }
+.ring[data-running] svg { filter: drop-shadow(0 0 14px color-mix(in oklab, var(--rc, var(--accent)) 35%, transparent)); }
+.ring .t { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.ring .time { font: 300 clamp(52px, 9vw, 68px)/1 var(--font); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+.ring .state { margin-top: 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.cycle { display: flex; gap: 8px; margin: 6px 0 4px; }
+.cycle i { width: 8px; height: 8px; border-radius: 50%; background: var(--well-2); transition: background .4s var(--ease), transform .5s var(--spring); }
+.cycle i.on { background: var(--accent); transform: scale(1.15); }
+.controls { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
+.btn.big { height: 48px; padding: 0 30px; font-size: 15px; border-radius: 24px; min-width: 128px; justify-content: center; }
+.linked { display: flex; gap: 8px; align-items: center; margin-top: 18px; min-height: 32px; max-width: 100%; }
+.linked .chip { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+.fstats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fstats .big { font-size: 40px; }
+.lens { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.lens label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--faint); }
+.lens input { width: 76px; height: 34px; }
+.pomo-pill { position: fixed; right: 20px; bottom: 20px; z-index: 45; display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 24px;
+  transform: translateY(16px) scale(.96); opacity: 0; pointer-events: none; transition: transform .5s var(--spring), opacity .25s var(--ease); }
+.pomo-pill.show { transform: none; opacity: 1; pointer-events: auto; }
+.pomo-pill .open { display: flex; align-items: center; gap: 10px; padding: 0 10px 0 2px; height: 36px; border-radius: 18px; }
+.pomo-pill .open:hover { background: var(--well); }
+.pomo-pill svg.mini { width: 30px; height: 30px; transform: rotate(-90deg); }
+.pomo-pill svg.mini circle { fill: none; stroke-width: 3.5; }
+.pomo-pill svg.mini .track { stroke: var(--well-2); }
+.pomo-pill svg.mini .prog { stroke: var(--rc, var(--accent)); stroke-linecap: round; stroke-dasharray: 100; transition: stroke-dashoffset .3s linear; }
+.pomo-pill[data-mode="short"], .pomo-pill[data-mode="long"] { --rc: var(--good); }
+.pomo-pill .ptime { font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.pomo-pill .iconbtn { width: 36px; height: 36px; }
+
 /* Overlays */
 .scrim { position: fixed; inset: 0; z-index: 50; background: var(--scrim); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: grid; place-items: start center; padding: 12vh 16px 16px; opacity: 0; transition: opacity .3s var(--ease); }
 .scrim.show { opacity: 1; }
@@ -343,6 +407,8 @@ textarea.input { height: 72px; padding: 10px 12px; resize: vertical; }
 
 /* Responsive: sidebar becomes a floating dock */
 @media (max-width: 820px) {
+  .board, .focus { grid-template-columns: 1fr; }
+  .pomo-pill { bottom: calc(86px + env(safe-area-inset-bottom)); right: 16px; }
   .app { grid-template-columns: 1fr; }
   .side { position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; padding: 0 16px max(12px, env(safe-area-inset-bottom)); }
   .side-in, .collapsed .side-in { width: auto; flex-direction: row; justify-content: space-around; padding: 6px; border-radius: 22px; }
@@ -387,6 +453,9 @@ textarea.input { height: 72px; padding: 10px 12px; resize: vertical; }
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8.5 5.5v13M15.5 5.5v13"/></symbol>
+  <symbol id="i-board" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="5" height="15" rx="1.8"/><rect x="9.5" y="4.5" width="5" height="10" rx="1.8"/><rect x="15.5" y="4.5" width="5" height="12.5" rx="1.8"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
 </svg>
 
@@ -399,6 +468,7 @@ textarea.input { height: 72px; padding: 10px 12px; resize: vertical; }
       <button class="nav" data-view="week"><svg class="i"><use href="#i-week"/></svg><span class="lbl">Week</span><span class="kbd">2</span></button>
       <button class="nav" data-view="tasks"><svg class="i"><use href="#i-tasks"/></svg><span class="lbl">Tasks</span><span class="kbd">3</span></button>
       <button class="nav" data-view="brief"><svg class="i"><use href="#i-brief"/></svg><span class="lbl">Assistant</span><span class="kbd">4</span></button>
+      <button class="nav" data-view="focus"><svg class="i"><use href="#i-focus"/></svg><span class="lbl">Focus</span><span class="kbd">5</span></button>
       <div class="sec">Spaces</div>
       <div id="spaceNav"></div>
       <div class="grow"></div>
@@ -418,6 +488,10 @@ textarea.input { height: 72px; padding: 10px 12px; resize: vertical; }
   </main>
 </div>
 
+<div class="pomo-pill glass" id="pomoPill" data-mode="focus">
+  <button class="open" id="pillOpen" aria-label="Open focus timer"><svg class="mini" viewBox="0 0 36 36"><circle class="track" cx="18" cy="18" r="14" pathLength="100"/><circle class="prog" id="pillRing" cx="18" cy="18" r="14" pathLength="100"/></svg><span class="ptime" id="pillTime">25:00</span></button>
+  <button class="iconbtn" id="pillToggle" aria-label="Pause timer"></button>
+</div>
 <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
 
 <script>
@@ -454,7 +528,7 @@ const store = {
 };
 
 const state = Object.assign({
-  items: null, view: 'agenda', space: 'all', typeFilter: 'all', show: 'todo',
+  items: null, view: 'agenda', space: 'all', typeFilter: 'all', show: 'todo', tasksMode: 'board',
   weekOffset: 0, collapsed: false, endpoint: '',
 }, store.get(KEY + ':ui', {}));
 state.items = store.get(KEY, null) || [];
@@ -465,7 +539,7 @@ function save() {
   store.set(KEY, state.items);
   const { items, ...ui } = state; store.set(KEY + ':ui', ui);
   const j = JSON.stringify(state.items);
-  if (j !== save.last) { save.last = j; pushSync(); }
+  if (j !== save.last) { save.last = j; save.ver = (save.ver || 0) + 1; pushSync(); }
 }
 
 /* ═══════════════════════ Helpers ═══════════════════════ */
@@ -481,6 +555,7 @@ function rowHTML(i, idx) {
     <span class="tico">${ico(TYPES[i.type].icon)}</span>
     <div class="ttl" data-act="edit"><b>${esc(i.title)}</b><div class="meta">${meta}${i.note ? ' · ' + esc(i.note.slice(0, 60)) : ''}</div></div>
     <div class="right"><span class="chip" style="--c:var(--s-${i.space})"><i></i>${SPACES[i.space].label}</span>
+      ${i.done ? '' : `<button class="iconbtn go" data-act="focusItem" aria-label="Focus on this" title="Start a focus session">${ico('focus')}</button>`}
       <button class="iconbtn go" data-act="edit" aria-label="Open">${ico('right')}</button></div>
   </div>`;
 }
@@ -577,21 +652,69 @@ function weekView() {
     </div></div>`;
 }
 
+const statusOf = i => i.done ? 'done' : i.doing ? 'doing' : 'todo';
+const COLS = [['todo', 'To do', 'var(--faint)'], ['doing', 'Doing', 'var(--accent)'], ['done', 'Done', 'var(--good)']];
+function focusCount(id) { return pomo.log.filter(l => l.itemId === id).length; }
+function dayLabel(d) {
+  const t = todayIso(); if (d === t) return 'Today';
+  if (d === iso(addDays(new Date(), 1))) return 'Tomorrow';
+  return fmtDay(d, { day: 'numeric', month: 'short' });
+}
+function kcardHTML(i) {
+  const st = statusOf(i), k = COLS.findIndex(c => c[0] === st), late = !i.done && i.date < todayIso(), n = focusCount(i.id);
+  return `<article class="kcard ${i.done ? 'done' : ''}" draggable="true" data-id="${i.id}" style="--c:var(--t-${i.type})">
+    <div class="kt" data-act="edit"><span class="tico">${ico(TYPES[i.type].icon)}</span><b>${esc(i.title)}</b></div>
+    <div class="km"><span class="${late ? 'late' : ''}">${late ? 'Overdue · ' : ''}${dayLabel(i.date)}${i.time ? ' · ' + i.time : ''}</span>
+      <span class="chip" style="--c:var(--s-${i.space})"><i></i>${SPACES[i.space].label}</span>${n ? `<span class="chip">${ico('focus')}${n}×</span>` : ''}</div>
+    <div class="kact">
+      ${k > 0 ? `<button class="iconbtn" data-act="kmove" data-to="${COLS[k - 1][0]}" aria-label="Move to ${COLS[k - 1][1]}">${ico('left')}</button>` : ''}
+      ${!i.done ? `<button class="iconbtn" data-act="focusItem" aria-label="Focus on this">${ico('focus')}</button>` : ''}
+      ${k < 2 ? `<button class="iconbtn" data-act="kmove" data-to="${COLS[k + 1][0]}" aria-label="Move to ${COLS[k + 1][1]}">${ico('right')}</button>` : ''}
+    </div></article>`;
+}
 function tasksView() {
   const v = visible(), t = todayIso();
   const tasks = sortItems(v.filter(i => i.type === 'task' || !i.time));
   const done = tasks.filter(i => i.done).length, pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+  const toggleBar = `<div class="bar">${seg('tasksMode', [['board', 'Board', 'board'], ['list', 'List', 'agenda']], state.tasksMode)}
+    <span style="flex:1"></span><button class="btn soft" data-act="new">${ico('plus')}Task</button></div>`;
+  if (state.tasksMode === 'board') {
+    const cols = COLS.map(([key, label, c], ci) => {
+      let list = tasks.filter(i => statusOf(i) === key);
+      if (key === 'done') list = list.slice().reverse().slice(0, 20);
+      return `<section class="kcol glass" data-col="${key}" style="--i:${ci}"><h3><span class="kd" style="--c:${c}"></span>${label}<span class="n">${list.length}</span></h3>
+        <div class="lane">${list.length ? list.map(kcardHTML).join('') : `<div class="lane-empty">${key === 'doing' ? 'Drag something you’re working on here' : 'Drop here'}</div>`}</div></section>`;
+    }).join('');
+    return header('Loose <em>ends</em>') + toggleBar + `<div class="board stagger">${cols}</div>`;
+  }
   const bySpace = Object.keys(SPACES).map(k => { const all = state.items.filter(i => i.space === k), d = all.filter(i => i.done).length; return [k, all.length ? d / all.length : 0, `${d}/${all.length}`]; });
-  return header('Loose <em>ends</em>') + `<div class="tasks stagger">
+  return header('Loose <em>ends</em>') + toggleBar + `<div class="tasks stagger">
     <div class="card glass" style="--i:0"><h4>Tasks done</h4>
       <div class="big">${done}<small> of ${tasks.length}</small></div>
       <div class="meter"><i style="width:${pct}%"></i></div>
       <div class="hint">${pct}% complete · ${tasks.filter(i => !i.done && i.date < t).length} overdue</div>
       <div class="spaces-break">${bySpace.map(([k, p, l]) => `<div class="sb" style="--c:var(--s-${k})"><span>${SPACES[k].label}</span><div class="meter"><i style="width:${p * 100}%"></i></div><span>${l}</span></div>`).join('')}</div>
     </div>
-    <section class="group glass" style="--i:1"><h3>Checklist<span class="n">${tasks.length}</span><span style="flex:1"></span><button class="btn ghost" data-act="new">${ico('plus')}Task</button></h3>
+    <section class="group glass" style="--i:1"><h3>Checklist<span class="n">${tasks.length}</span></h3>
       ${tasks.length ? tasks.map((i, k) => rowHTML(i, k)).join('') : '<div class="empty">Nothing loose. Nice.</div>'}</section>
   </div>`;
+}
+function setStatus(id, st) {
+  const it = state.items.find(i => i.id === id); if (!it || statusOf(it) === st) return;
+  const prev = statusOf(it);
+  it.done = st === 'done'; it.doing = st === 'doing'; save(); flipRender();
+  if (st === 'done') toast(`Done · ${it.title}`, () => setStatus(id, prev));
+}
+function flipRender() {
+  const before = {}; document.querySelectorAll('.kcard').forEach(c => before[c.dataset.id] = c.getBoundingClientRect());
+  render();
+  const spring = 'cubic-bezier(.34,1.36,.5,1)';
+  document.querySelectorAll('.kcard').forEach(c => {
+    const b = before[c.dataset.id];
+    if (!b) { c.animate([{ opacity: 0, transform: 'scale(.95)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: spring }); return; }
+    const r = c.getBoundingClientRect(), dx = b.left - r.left, dy = b.top - r.top;
+    if (dx || dy) c.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 480, easing: spring });
+  });
 }
 
 function briefText() {
@@ -629,8 +752,113 @@ dayline.brief()</pre>
 }
 
 /* ═══════════════════════ Render ═══════════════════════ */
+/* ═══════════════════════ Pomodoro ═══════════════════════
+   Timer state is per browser (localStorage); sessions are counted per item. */
+const POMO_KEY = 'dayline:pomo';
+const MODE_LABEL = { focus: 'Focus', short: 'Short break', long: 'Long break' };
+const pomo = Object.assign({ mode: 'focus', running: false, endAt: null, left: null, itemId: null, cycle: 0, lens: { focus: 25, short: 5, long: 15 }, log: [] }, store.get(POMO_KEY, {}) || {});
+const pomoSave = () => store.set(POMO_KEY, pomo);
+const pomoTotal = (m = pomo.mode) => pomo.lens[m] * 60000;
+const pomoLeft = () => pomo.running ? Math.max(0, pomo.endAt - Date.now()) : (pomo.left ?? pomoTotal());
+const fmtLeft = ms => { const s = Math.ceil(ms / 1000); return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; };
+const pomoLabel = () => MODE_LABEL[pomo.mode] + (!pomo.running && pomo.left != null ? ' · paused' : '');
+function pomoStart(itemId) {
+  if (itemId !== undefined) pomo.itemId = itemId;
+  if (!pomo.running) { pomo.endAt = Date.now() + pomoLeft(); pomo.running = true; pomo.left = null; }
+  pomoSave(); askNotify(); pomoPaint(true);
+}
+function pomoPause() { if (!pomo.running) return; pomo.left = pomoLeft(); pomo.running = false; pomo.endAt = null; pomoSave(); pomoPaint(true); }
+const pomoToggle = () => pomo.running ? pomoPause() : pomoStart();
+function pomoReset() { pomo.running = false; pomo.endAt = null; pomo.left = null; pomoSave(); pomoPaint(true); }
+function pomoSetMode(m) { pomo.mode = m; pomoReset(); }
+function pomoFinish(completed) {
+  if (completed) { // another tab may already have finished this session
+    const saved = store.get(POMO_KEY, {}) || {};
+    if (!saved.running || saved.endAt !== pomo.endAt) { Object.assign(pomo, saved); return pomoPaint(true); }
+  }
+  const was = pomo.mode;
+  if (was === 'focus' && completed) {
+    pomo.log.push({ at: Date.now(), date: todayIso(), mins: pomo.lens.focus, itemId: pomo.itemId }); pomo.log = pomo.log.slice(-1000); pomo.cycle++;
+  }
+  pomo.mode = was === 'focus' ? (pomo.cycle && pomo.cycle % 4 === 0 ? 'long' : 'short') : 'focus';
+  pomo.running = false; pomo.endAt = null; pomo.left = null; pomoSave();
+  if (completed) {
+    const msg = was === 'focus' ? `Focus done. ${MODE_LABEL[pomo.mode]} time.` : 'Break over. Back to it.';
+    chime(); notify(msg); toast(msg, () => pomoStart(), was === 'focus' ? 'Start break' : 'Start focus');
+  }
+  pomoPaint(true);
+}
+function pomoPaint(full) {
+  if (full && state.view === 'focus' && !document.querySelector('.scrim')) return render();
+  const left = pomoLeft(), frac = 1 - left / pomoTotal(), txt = fmtLeft(left);
+  const set = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
+  set('pomoRing', el => el.style.strokeDashoffset = (frac * 100).toFixed(2));
+  set('pomoTime', el => el.textContent = txt);
+  set('pomoState', el => el.textContent = pomoLabel());
+  const pill = document.getElementById('pomoPill');
+  pill.classList.toggle('show', (pomo.running || pomo.left != null) && state.view !== 'focus');
+  pill.dataset.mode = pomo.mode;
+  set('pillRing', el => el.style.strokeDashoffset = (frac * 100).toFixed(2));
+  set('pillTime', el => el.textContent = txt);
+  set('pillToggle', el => { el.innerHTML = ico(pomo.running ? 'pause' : 'play'); el.setAttribute('aria-label', pomo.running ? 'Pause timer' : 'Resume timer'); });
+  document.title = pomo.running ? `${txt} · ${MODE_LABEL[pomo.mode]} — Dayline` : 'Dayline';
+}
+setInterval(() => { if (pomo.running) { if (pomoLeft() <= 0) pomoFinish(true); else pomoPaint(false); } }, 250);
+addEventListener('storage', e => { if (e.key === POMO_KEY) { Object.assign(pomo, store.get(POMO_KEY, {}) || {}); pomoPaint(true); } });
+function chime() {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)(), t0 = ac.currentTime;
+    [[660, 0], [880, .18], [990, .36]].forEach(([f, t]) => {
+      const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t0 + t); g.gain.exponentialRampToValueAtTime(.18, t0 + t + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + t + .7);
+      o.connect(g).connect(ac.destination); o.start(t0 + t); o.stop(t0 + t + .75);
+    });
+  } catch (e) {}
+}
+function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {} }
+function notify(body) { try { if ('Notification' in window && Notification.permission === 'granted' && document.hidden) new Notification('Dayline', { body }); } catch (e) {} }
+function focusItem(id) {
+  const it = state.items.find(i => i.id === id); if (!it) return;
+  if (pomo.mode !== 'focus') { pomo.mode = 'focus'; pomo.left = null; pomo.running = false; }
+  pomo.itemId = id; pomoStart();
+  toast(`Focusing · ${it.title}`, () => go('focus'), 'Open');
+}
+
+function focusView() {
+  const left = pomoLeft(), frac = 1 - left / pomoTotal(), t = todayIso();
+  const item = state.items.find(i => i.id === pomo.itemId);
+  const todayLog = pomo.log.filter(l => l.date === t), mins = todayLog.reduce((n, l) => n + l.mins, 0);
+  const picks = sortItems(visible().filter(i => !i.done && i.date <= iso(addDays(new Date(), 1)))).slice(0, 8);
+  const inSet = pomo.cycle % 4;
+  return header('Deep <em>focus</em>') + `<div class="focus stagger">
+    <div class="card glass timer" style="--i:0">
+      ${seg('pomoMode', Object.entries(MODE_LABEL), pomo.mode)}
+      <div class="ring" data-mode="${pomo.mode}" ${pomo.running ? 'data-running' : ''}>
+        <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="54" pathLength="100"/><circle class="prog" id="pomoRing" cx="60" cy="60" r="54" pathLength="100" style="stroke-dashoffset:${(frac * 100).toFixed(2)}"/></svg>
+        <div class="t"><div><div class="time" id="pomoTime">${fmtLeft(left)}</div><div class="state" id="pomoState">${pomoLabel()}</div></div></div>
+      </div>
+      <div class="cycle" title="${inSet} of 4 before a long break">${[0, 1, 2, 3].map(k => `<i class="${k < inSet ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="controls">
+        <button class="btn ghost" data-act="pomoReset">Reset</button>
+        <button class="btn ink big" data-act="pomoToggle">${ico(pomo.running ? 'pause' : 'play')}${pomo.running ? 'Pause' : pomo.left != null ? 'Resume' : 'Start'}</button>
+        <button class="btn ghost" data-act="pomoSkip">Skip</button>
+      </div>
+      <div class="linked">${item ? `<span class="hint">On</span><span class="chip" style="--c:var(--t-${item.type})"><i></i>${esc(item.title)}</span><button class="btn ghost" data-act="pomoUnlink">Clear</button>` : '<span class="hint">Pick what you’re focusing on, or just start.</span>'}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <section class="group glass" style="--i:1"><h3>Focus on<span class="n">${picks.length}</span></h3>
+        ${picks.length ? picks.map(i => `<button class="pal-item ${i.id === pomo.itemId ? 'on' : ''}" data-act="pomoLink" data-id="${i.id}" style="--c:var(--t-${i.type})"><span class="tico">${ico(TYPES[i.type].icon)}</span><span style="min-width:0"><b>${esc(i.title)}</b><small>${dayLabel(i.date)}${i.time ? ' · ' + i.time : ''} · ${SPACES[i.space].label}${focusCount(i.id) ? ` · ${focusCount(i.id)}× focused` : ''}</small></span></button>`).join('') : '<div class="empty">Nothing open for today or tomorrow.</div>'}
+      </section>
+      <div class="card glass" style="--i:2"><h4>Today</h4>
+        <div class="fstats"><div><div class="big">${todayLog.length}</div><div class="hint">sessions</div></div><div><div class="big">${mins >= 60 ? (mins / 60).toFixed(1) + '<small>h</small>' : mins + '<small>m</small>'}</div><div class="hint">focused</div></div></div>
+        <div class="lens">${Object.entries(MODE_LABEL).map(([k, l]) => `<label>${l} (min)<input class="input" type="number" min="1" max="180" data-len="${k}" value="${pomo.lens[k]}"></label>`).join('')}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 const viewEl = document.getElementById('view');
-const VIEWS = { agenda: ['Agenda', agendaView], week: ['Week', weekView], tasks: ['Tasks', tasksView], brief: ['Assistant', briefView] };
+const VIEWS = { agenda: ['Agenda', agendaView], week: ['Week', weekView], tasks: ['Tasks', tasksView], brief: ['Assistant', briefView], focus: ['Focus', focusView] };
 function render(animate = false) {
   const [name, fn] = VIEWS[state.view];
   const y = scrollY;
@@ -641,6 +869,7 @@ function render(animate = false) {
   document.querySelectorAll('.nav[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === state.view));
   renderSpaces();
   requestAnimationFrame(() => placeIndicators());
+  pomoPaint(false);
   if (state.view === 'week' && animate) { const w = viewEl.querySelector('.week'); if (w) w.scrollTop = 0; }
 }
 function renderSpaces() {
@@ -652,9 +881,9 @@ function go(view) { if (view === state.view) return; state.view = view; save(); 
 
 /* ═══════════════════════ Actions ═══════════════════════ */
 let lastUndo = null;
-function toast(msg, undo) {
+function toast(msg, undo, label = 'Undo') {
   const el = document.getElementById('toast'); document.getElementById('toastMsg').textContent = msg;
-  document.getElementById('toastUndo').style.display = undo ? '' : 'none'; lastUndo = undo;
+  const tb = document.getElementById('toastUndo'); tb.textContent = label; tb.style.display = undo ? '' : 'none'; lastUndo = undo;
   el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 3600);
 }
 document.getElementById('toastUndo').onclick = () => { if (lastUndo) { lastUndo(); lastUndo = null; } document.getElementById('toast').classList.remove('show'); };
@@ -790,6 +1019,8 @@ function openPalette() {
     { t: 'Week', s: 'Go to view', ic: 'week', k: '2', run: () => go('week') },
     { t: 'Tasks', s: 'Go to view', ic: 'tasks', k: '3', run: () => go('tasks') },
     { t: 'Assistant brief', s: 'Go to view', ic: 'brief', k: '4', run: () => go('brief') },
+    { t: 'Focus timer', s: 'Go to view', ic: 'focus', k: '5', run: () => go('focus') },
+    { t: 'Start / pause timer', s: 'Pomodoro', ic: 'play', k: 'P', run: () => pomoToggle() },
     { t: 'Toggle dark mode', s: 'Appearance', ic: 'moon', k: '', run: toggleTheme },
     { t: 'Copy daily brief', s: 'Assistant', ic: 'copy', k: '', run: copyBrief },
   ];
@@ -862,7 +1093,7 @@ function importJSON() {
 function normalize(x) {
   if (!x || !x.title) return null;
   return { id: x.id || uid(), title: String(x.title), type: TYPES[x.type] ? x.type : 'task', space: SPACES[x.space] ? x.space : 'work',
-    date: /^\d{4}-\d\d-\d\d$/.test(x.date) ? x.date : todayIso(), time: /^\d\d:\d\d$/.test(x.time) ? x.time : null, dur: +x.dur || 30, done: !!x.done, note: x.note || '' };
+    date: /^\d{4}-\d\d-\d\d$/.test(x.date) ? x.date : todayIso(), time: /^\d\d:\d\d$/.test(x.time) ? x.time : null, dur: +x.dur || 30, done: !!x.done, doing: !x.done && !!x.doing, note: x.note || '' };
 }
 function setSync(cls, text) { syncStatus = { cls, text }; const el = document.getElementById('syncStatus'); if (el) { el.className = 'status ' + cls; el.innerHTML = `<i></i>${esc(text)}`; } }
 const stamp = () => 'Synced ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -930,7 +1161,7 @@ const backends = {
   async supabase() {
     return {
       async pull() {
-        const { data, error } = await sb.from('items').select('id,title,type,space,date,time,dur,done,note').order('date');
+        const { data, error } = await sb.from('items').select('id,title,type,space,date,time,dur,done,doing,note').order('date');
         if (error) throw error;
         return data;
       },
@@ -961,7 +1192,9 @@ async function pullSync() {
   if (pushSync.pending || pullSync.busy) return;
   pullSync.busy = true;
   try {
+    const v0 = save.ver || 0;
     const be = await backends[m](), remote = (await be.pull()).map(normalize).filter(Boolean);
+    if ((save.ver || 0) !== v0 || pushSync.pending) { pullSync.busy = false; return; } // edited while downloading: keep local, it is being pushed
     pullSync.done = true;
     if (m === 'supabase') lastSynced = new Map(remote.map(i => [i.id, canon(i)]));
     const j = JSON.stringify(remote);
@@ -988,6 +1221,7 @@ document.addEventListener('click', e => {
   const nav = e.target.closest('.nav[data-view]'); if (nav) return go(nav.dataset.view);
   const sp = e.target.closest('.nav[data-space]'); if (sp) { state.space = sp.dataset.space; save(); render(true); return; }
   const segBtn = e.target.closest('.seg button');
+  if (segBtn && segBtn.closest('.seg').dataset.seg === 'pomoMode') { const v = segBtn.dataset.v; segBtn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === segBtn)); placeIndicators(segBtn.parentElement.parentElement); setTimeout(() => pomoSetMode(v), 200); return; }
   if (segBtn) { const k = segBtn.closest('.seg').dataset.seg; state[k] = segBtn.dataset.v; save();
     segBtn.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === segBtn)); placeIndicators(segBtn.parentElement.parentElement);
     setTimeout(() => render(), 180); return; }
@@ -1002,6 +1236,13 @@ document.addEventListener('click', e => {
     case 'export': exportJSON(); break;
     case 'import': importJSON(); break;
     case 'clearAll': confirmClearAll(); break;
+    case 'kmove': setStatus(id, a.dataset.to); break;
+    case 'focusItem': focusItem(id); break;
+    case 'pomoToggle': pomoToggle(); break;
+    case 'pomoReset': pomoReset(); break;
+    case 'pomoSkip': pomoFinish(false); break;
+    case 'pomoLink': pomo.itemId = id; pomoSave(); render(); break;
+    case 'pomoUnlink': pomo.itemId = null; pomoSave(); render(); break;
     case 'sbSaveCfg': {
       const url = document.getElementById('sbUrl').value.trim().replace(/\/+$/, ''), key = document.getElementById('sbKey').value.trim();
       if (!/^https:\/\/[\w-]+\.supabase\.co$/.test(url) || key.length < 20) { toast('Check the project URL and anon key'); break; }
@@ -1049,15 +1290,40 @@ document.addEventListener('dblclick', e => {
   openEdit(null, { date: col.dataset.date, time: `${pad(Math.floor(h))}:${h % 1 ? '30' : '00'}`, type: 'focus', dur: 60 });
 });
 document.getElementById('searchBtn').onclick = openPalette;
+document.getElementById('pillOpen').onclick = () => go('focus');
+document.getElementById('pillToggle').onclick = () => pomoToggle();
+document.addEventListener('change', e => {
+  const k = e.target.dataset && e.target.dataset.len; if (!k) return;
+  pomo.lens[k] = Math.min(180, Math.max(1, Math.round(+e.target.value || pomo.lens[k])));
+  if (!pomo.running && pomo.left == null) pomoPaint(true); pomoSave();
+});
+/* Kanban drag and drop */
+let dragId = null;
+document.addEventListener('dragstart', e => {
+  const c = e.target.closest && e.target.closest('.kcard'); if (!c) return;
+  dragId = c.dataset.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId);
+  requestAnimationFrame(() => c.classList.add('dragging'));
+});
+document.addEventListener('dragend', () => { dragId = null; document.querySelectorAll('.dragging, .kcol.over').forEach(x => x.classList.remove('dragging', 'over')); });
+document.addEventListener('dragover', e => {
+  const col = dragId && e.target.closest && e.target.closest('.kcol'); if (!col) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.kcol.over').forEach(x => x !== col && x.classList.remove('over')); col.classList.add('over');
+});
+document.addEventListener('drop', e => {
+  const col = dragId && e.target.closest && e.target.closest('.kcol'); if (!col) return;
+  e.preventDefault(); const id = dragId; dragId = null; col.classList.remove('over'); setStatus(id, col.dataset.col);
+});
 document.getElementById('newBtn').onclick = () => openNew();
 document.getElementById('themeBtn').onclick = toggleTheme;
 document.getElementById('collapseBtn').onclick = () => setCollapsed(!state.collapsed);
 document.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if (!document.querySelector('.scrim')) openPalette(); return; }
   if (e.target.matches('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey || document.querySelector('.scrim')) return;
-  const map = { '1': 'agenda', '2': 'week', '3': 'tasks', '4': 'brief' };
+  const map = { '1': 'agenda', '2': 'week', '3': 'tasks', '4': 'brief', '5': 'focus' };
   if (map[e.key]) go(map[e.key]);
   else if (e.key === 'n') { e.preventDefault(); openNew(); }
+  else if (e.key === 'p' || (e.key === ' ' && state.view === 'focus' && !e.target.closest('button'))) { e.preventDefault(); pomoToggle(); }
   else if (e.key === '[') setCollapsed(!state.collapsed);
   else if (state.view === 'week' && e.key === 'ArrowLeft') { state.weekOffset--; render(true); }
   else if (state.view === 'week' && e.key === 'ArrowRight') { state.weekOffset++; render(true); }
